@@ -1,0 +1,30 @@
+@startuml
+!theme toy
+autonumber
+actor Usuario
+participant "API Controller" as Controller
+participant "ProductService" as Service
+participant "ProductRepository" as Repository
+database "Base de Datos" as DB
+
+Usuario -> Controller: POST /productos
+Controller -> Service: crearProducto(dto)
+Service -> Repository: buscarPorNombre(dto.nombre)
+Repository -> DB: SELECT * FROM productos WHERE nombre = dto.nombre
+DB -> Repository: Retorna producto si existe
+
+alt Producto ya existe
+    Repository -> Service: Producto encontrado
+    Service -> Controller: Lanza excepción "Producto ya registrado"
+    Controller -> Usuario: 400 Bad Request
+else Producto no existe
+    Repository -> Service: Producto no encontrado
+    Service -> Repository: guardar(dto)
+    Repository -> DB: INSERT INTO productos (...)
+    DB -> Repository: Confirma inserción
+    Repository -> Service: Retorna producto guardado
+    Service -> Controller: Retorna producto creado
+    Controller -> Usuario: 201 Created
+end
+
+@enduml
